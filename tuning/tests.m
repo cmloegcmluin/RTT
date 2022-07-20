@@ -7,6 +7,8 @@ format = "EBK";
 testClose[fn_, args___, inputExpectation_] := Module[
   {actual, expectation},
   
+  (*Print["huhmmm", Apply[fn, {args}]];*)
+  
   actual = First[getA[parseTemperamentData[Apply[fn, {args}]]]];
   expectation = First[getA[parseTemperamentData[inputExpectation]]];
   
@@ -14,8 +16,8 @@ testClose[fn_, args___, inputExpectation_] := Module[
     AllTrue[MapThread[Abs[#1 - #2] < 10^-accuracy&, {actual, expectation}], TrueQ],
     passes += 1,
     failures += 1;
-    Print[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
-    Print[ToString[SetAccuracy[actual, accuracy + 1]]];
+    printWrapper[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
+    printWrapper[ToString[SetAccuracy[actual, accuracy + 1]]];
   ]
 ];
 testCloseNoParse[fn_, args___, expectation_] := Module[{actual},
@@ -25,8 +27,8 @@ testCloseNoParse[fn_, args___, expectation_] := Module[{actual},
     AllTrue[MapThread[Abs[#1 - #2] < 10^-accuracy&, {actual, expectation}], TrueQ],
     passes += 1,
     failures += 1;
-    Print[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
-    Print[ToString[SetAccuracy[actual, accuracy + 1]]];
+    printWrapper[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
+    printWrapper[ToString[SetAccuracy[actual, accuracy + 1]]];
   ]
 ];
 testCloseNotList[fn_, args___, expectation_] := Module[{actual},
@@ -36,8 +38,8 @@ testCloseNotList[fn_, args___, expectation_] := Module[{actual},
     Abs[actual - expectation] < 10^-accuracy,
     passes += 1,
     failures += 1;
-    Print[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
-    Print[ToString[SetAccuracy[actual, accuracy + 1]]];
+    printWrapper[Style[StringForm["``[``] != ``; actual result was:", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
+    printWrapper[ToString[SetAccuracy[actual, accuracy + 1]]];
   ]
 ];
 testNotClose[fn_, args___, expectation_] := Module[{actual},
@@ -47,7 +49,7 @@ testNotClose[fn_, args___, expectation_] := Module[{actual},
     AnyTrue[MapThread[Abs[#1 - #2] > 10^-accuracy&, {actual, expectation}], TrueQ],
     passes += 1,
     failures += 1;
-    Print[Style[StringForm["``[``] = `` but it was not supposed to", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
+    printWrapper[Style[StringForm["``[``] = `` but it was not supposed to", fn, {args}, SetAccuracy[expectation, accuracy + 1]], 14, Red]];
   ]
 ];
 
@@ -77,7 +79,7 @@ sensamagic = "[⟨1 0 0 0] ⟨0 1 1 2] ⟨0 0 2 -1]⟩";
 
 fiveOddLimitDiamond = "{3/2, 4/3, 5/4, 8/5, 5/3, 6/5}";
 
-testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> \[Infinity], "damageWeightingSlope" -> "unweighted"}, "⟨1200.000, 696.578]"];
+testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> \[Infinity], "damageWeightingSlope" -> "unweighted", "logging" -> True}, "⟨1200.000, 696.578]"];
 
 
 (* optimizeGeneratorsTuningMap, by individual tuning scheme properties *)
@@ -93,7 +95,6 @@ testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOdd
 testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> \[Infinity], "damageWeightingSlope" -> "complexityWeighted", "complexityNegateLogPrimeCoordination" -> True, "complexityNormPower" -> 2}, "⟨1197.435 694.976]"];
 testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> \[Infinity], "damageWeightingSlope" -> "complexityWeighted"}, "⟨1197.979 694.711]"];
 testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> \[Infinity], "damageWeightingSlope" -> "complexityWeighted", "complexityNormPower" -> 2}, "⟨1198.155 695.010]"];
-
 
 testClose[optimizeGeneratorsTuningMap, meantone, {"targetedIntervals" -> fiveOddLimitDiamond, "optimizationPower" -> 2, "damageWeightingSlope" -> "unweighted"}, "⟨1199.022 695.601]"];
 
@@ -724,14 +725,14 @@ testClose[optimizeGeneratorsTuningMap, sensamagic, "minimax-copfr-S", optimizeGe
 
 (* ___ PRIVATE ___ *)
 
-(* logPrimeCentsMap *)
-test[logPrimeCentsMap, {{{12, 19, 28}}, "co", {2, 3, 5}}, {1200 * Log2[2], 1200 * Log2[3], 1200 * Log2[5]}];
-test[logPrimeCentsMap, {{{1, 0, -4, 0}, {0, 1, 2, 0}, {0, 0, 0, 1}}, "co", {2, 9, 5, 21}}, {1200 * Log2[2], 1200 * Log2[9], 1200 * Log2[5], 1200 * Log2[21]}];
+(* getPrimeCentsMap *)
+test[getPrimeCentsMap, {{{12, 19, 28}}, "co", {2, 3, 5}}, {{{1200 * Log2[2], 1200 * Log2[3], 1200 * Log2[5]}}, "co"}];
+test[getPrimeCentsMap, {{{1, 0, -4, 0}, {0, 1, 2, 0}, {0, 0, 0, 1}}, "co", {2, 9, 5, 21}}, {{{1200 * Log2[2], 1200 * Log2[9], 1200 * Log2[5], 1200 * Log2[21]}}, "co"}];
 
 (* getOddDiamond *)
-test[getOddDiamond, 2, {{2, -1}, {-1, 1}}];
-test[getOddDiamond, 3, {{2, -1, 0}, {3, 0, -1}, {-1, 1, 0}, {1, 1, -1}, {-2, 0, 1}, {0, -1, 1}}];
-test[getOddDiamond, 4, {{2, -1, 0, 0}, {3, 0, -1, 0}, {3, 0, 0, -1}, {4, -2, 0, 0}, {-1, 1, 0, 0}, {1, 1, -1, 0}, {2, 1, 0, -1}, {-2, 0, 1, 0}, {0, -1, 1, 0}, {1, 0, 1, -1}, {1, -2, 1, 0}, {-2, 0, 0, 1}, {-1, -1, 0, 1}, {0, 0, -1, 1}, {1, -2, 0, 1}, {-3, 2, 0, 0}, {0, 2, -1, 0}, {0, 2, 0, -1}}];
+test[getOddDiamond, 2, {{{2, -1}, {-1, 1}}, "contra"}];
+test[getOddDiamond, 3, {{{2, -1, 0}, {3, 0, -1}, {-1, 1, 0}, {1, 1, -1}, {-2, 0, 1}, {0, -1, 1}}, "contra"}];
+test[getOddDiamond, 4, {{{2, -1, 0, 0}, {3, 0, -1, 0}, {3, 0, 0, -1}, {4, -2, 0, 0}, {-1, 1, 0, 0}, {1, 1, -1, 0}, {2, 1, 0, -1}, {-2, 0, 1, 0}, {0, -1, 1, 0}, {1, 0, 1, -1}, {1, -2, 1, 0}, {-2, 0, 0, 1}, {-1, -1, 0, 1}, {0, 0, -1, 1}, {1, -2, 0, 1}, {-3, 2, 0, 0}, {0, 2, -1, 0}, {0, 2, 0, -1}}, "contra"}];
 
 (* octaveReduce *)
 test[octaveReduce, 3, 3 / 2];
@@ -790,8 +791,8 @@ testCloseNoParse[getTuningMapDamages, "⟨12 29 28]", "⟨1200 1900 2800]", five
 testCloseNoParse[getTuningMapDamages, "⟨12 29 28]", "⟨1200 1900 2800]", fiveOddLimitDiamond <> " minisum-U", {FractionBox["3", "2"] -> 1.955, FractionBox["4", "3"] -> 1.955, FractionBox["5", "4"] -> 13.68628, FractionBox["8", "5"] -> 13.68628, FractionBox["5", "3"] -> 15.6413, FractionBox["6", "5"] -> 15.6413}];
 
 (* tuningInverse *)
-test[tuningInverse, {{Log2[2], 0, 0}, {0, Log2[3], 0}, {0, 0, Log2[5]}}, {{1 / Log2[2], 0, 0}, {0, 1 / Log2[3], 0}, {0, 0, 1 / Log2[5]}}];
-test[tuningInverse, {{Log2[2], 0, 0}, {0, Log2[3], 0}, {0, 0, Log2[5]}, {Log2[2], Log2[3], Log[5]}}, {{1 / Log2[2], 0, 0, 0}, {0, 1 / Log2[3], 0, 0}, {0, 0, 1 / Log2[5], 0}}];
+test[tuningInverse, {{{Log2[2], 0, 0}, {0, Log2[3], 0}, {0, 0, Log2[5]}}, "co"}, {{{1 / Log2[2], 0, 0}, {0, 1 / Log2[3], 0}, {0, 0, 1 / Log2[5]}}, "co"}];
+test[tuningInverse, {{{Log2[2], 0, 0}, {0, Log2[3], 0}, {0, 0, Log2[5]}, {Log2[2], Log2[3], Log[5]}}, "co"}, {{{1 / Log2[2], 0, 0, 0}, {0, 1 / Log2[3], 0, 0}, {0, 0, 1 / Log2[5], 0}}, "co"}];
 
 (* getDualPower *)
 test[getDualPower, 1, \[Infinity]];
@@ -884,5 +885,9 @@ sources:
 *)
 
 
-Print["TOTAL FAILURES: ", failures];
-Print["TOTAL PASSES: ", passes];
+printWrapper["TOTAL FAILURES: ", failures];
+printWrapper["TOTAL PASSES: ", passes];
+
+
+format = "EBK";
+optimizeGeneratorsTuningMap[meantone, {"systematicTuningSchemeName" -> "odd-diamond minimax-U", "logging" -> True}]

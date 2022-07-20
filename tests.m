@@ -8,7 +8,7 @@ test[fn_, args___, expectation_] := Module[{actual},
     actual == expectation,
     passes += 1,
     failures += 1;
-    Print[Style[StringForm["``[``] != ``; actual result was: ``", fn, {args}, expectation, actual], 14, Red]]
+    printWrapper[Style[StringForm["``[``] != ``; actual result was: ``", fn, {args}, expectation, actual], 14, Red]]
   ]
 ];
 
@@ -107,7 +107,7 @@ verifyDuals[m_, c_] := Module[{dualM, dualC},
     dualC == canonicalFormPrivate[c] && dualM == canonicalFormPrivate[m],
     passes += 1,
     failures += 1;
-    Print["verifyDuals[", m, ", ", c, "]; dualC: ", dualC, " canonicalFormPrivate[c]: ", canonicalFormPrivate[c], " dualM: ", dualM, " canonicalFormPrivate[m]: ", canonicalFormPrivate[m]]
+    printWrapper["verifyDuals[", m, ", ", c, "]; dualC: ", dualC, " canonicalFormPrivate[c]: ", canonicalFormPrivate[c], " dualM: ", dualM, " canonicalFormPrivate[m]: ", canonicalFormPrivate[m]]
   ];
 ];
 
@@ -964,5 +964,5 @@ test[getFormalPrimesA, {{{11, 35, 31}}, "co", {2, 9, 7}}, {{1, 0, 0, 0}, {0, 2, 
 
 
 
-Print["TOTAL FAILURES: ", failures];
-Print["TOTAL PASSES: ", passes];
+printWrapper["TOTAL FAILURES: ", failures];
+printWrapper["TOTAL PASSES: ", passes];

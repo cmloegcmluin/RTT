@@ -402,6 +402,8 @@ getGeneratorsPreimageTransversalPrivate[t_] := Module[{ma, decomp, left, snf, ri
 parseTemperamentData[temperamentData_] := Module[
   {ebk, intervalBasis, variance, ebkVectors},
   
+  (*Print["temperamentData: ", temperamentData];*)
+  
   If[
     StringMatchQ[ToString[temperamentData], RegularExpression[".*[\\[\\]⟨⟩<>]+.*"]],
     
@@ -455,17 +457,23 @@ parseEBKVector[ebkVector_] := Map[ToExpression, StringSplit[ebkVector, RegularEx
 parseIntervalBasis[intervalBasisString_] := Map[ToExpression, StringSplit[intervalBasisString, "."]];
 
 toEBK[t_] := If[
-  isContra[t],
+  ListQ[t],
+  (*Print["wow why am i still doing this ", t];*)
   If[
-    getN[t] == 1,
-    vectorToEBK[First[getA[t]]],
-    ToString[StringForm["⟨``]", StringRiffle[ Map[vectorToEBK, getA[t]]]]]
+    isContra[t],
+    If[
+      getN[t] == 1,
+      vectorToEBK[First[getA[t]]],
+      ToString[StringForm["⟨``]", StringRiffle[ Map[vectorToEBK, getA[t]]]]]
+    ],
+    If[
+      getR[t] == 1,
+      covectorToEBK[First[getA[t]]],
+      ToString[StringForm["[``⟩", StringRiffle[ Map[covectorToEBK, getA[t]]]]]
+    ]
   ],
-  If[
-    getR[t] == 1,
-    covectorToEBK[First[getA[t]]],
-    ToString[StringForm["[``⟩", StringRiffle[ Map[covectorToEBK, getA[t]]]]]
-  ]
+  (*Print["should be fine! ", t];*)
+  t
 ];
 
 outputPrecision = 4;
@@ -475,17 +483,19 @@ covectorToEBK[covector_] := ToString[StringForm["⟨``]", StringRiffle[Map[forma
 formatNumber[entry_] := ToString[If[IntegerQ[entry], entry, SetAccuracy[N[entry], outputPrecision]]];
 formatNumberList[l_] := Map[formatNumber, l];
 
-toDisplay[t_] := MatrixForm[Map[formatNumberList, If[isContra[t], Transpose[getA[t]], getA[t]]]];
+toDisplay[t_] := If[ListQ[t], MatrixForm[Map[formatNumberList, If[isContra[t], Transpose[getA[t]], getA[t]]]], t];
 
-formatOutput[input_] := If[
+formatOutput[output_] := If[
   format == "EBK",
-  toEBK[input],
+  toEBK[output],
   If[
     format == "display",
-    toDisplay[input],
-    input
+    toDisplay[output],
+    output
   ]
 ];
+
+printWrapper[string___] := Apply[Print, {string}];
 
 parseQuotientSet[inputQuotientSetString_, t_] := Module[
   {quotientSetString, quotients},
@@ -582,6 +592,19 @@ isCo[t_] := MemberQ[{
   "val",
   "with"
 }, getVariance[t]];
+multiply[t_, variance_] := Module[
+  {a},
+  
+  a = Apply[Dot, Map[If[isContra[#], Transpose[getA[#]], getA[#]]&, t]];
+  
+  If[
+    isCo[{{}, variance}],
+    {a, variance},
+    {Transpose[a], variance}
+  ]
+];
+inverse[t_] := {Inverse[getA[t]], getVariance[t]};
+transpose[t_] := {getA[t], If[getVariance[t] == "co", "contra", "co"]};
 
 
 (* CANONICALIZATION *)
